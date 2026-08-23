@@ -1,0 +1,37 @@
+services:
+
+  keycloak-service:
+    image: quay.io/keycloak/keycloak:26.7.0
+    container_name: keycloak-service
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8100:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
+  kvist-og-bjaelke-app:
+    build:
+      context: ./kvist-og-bjælke
+    container_name: kvist-og-bjaelke-app
+    ports:
+      - "3400:80"
+    depends_on:
+      - kvist-og-bjaelke-api
+
+  kvist-og-bjaelke-api:
+    build:
+      context: ./python-api
+    container_name: kvist-og-bjaelke-api
+    environment:
+      DATABASE_PATH: /app/data/app.db
+    ports:
+      - "3001:80"
+    volumes:
+      - api_data:/app/data
+
+volumes:
+  keycloak_data:
+  api_data:
