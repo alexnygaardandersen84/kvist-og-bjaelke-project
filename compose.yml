@@ -3,7 +3,7 @@ services:
   keycloak-service:
     image: quay.io/keycloak/keycloak:26.7.0
     container_name: keycloak-service
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -11,19 +11,26 @@ services:
       - "8100:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./keycloak/kvist-og-bjaelke-realm.json:/opt/keycloak/data/import/kvist-og-bjaelke-realm.json:ro
 
   kvist-og-bjaelke-app:
     build:
       context: ./kvist-og-bjælke
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://localhost:8100}
+        VITE_KEYCLOAK_REALM: ${VITE_KEYCLOAK_REALM:-kvist-og-bjaelke}
+        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-kvist-og-bjaelke-app}
     container_name: kvist-og-bjaelke-app
     ports:
       - "3400:80"
     depends_on:
       - kvist-og-bjaelke-api
+      - keycloak-service
 
   kvist-og-bjaelke-api:
     build:
-      context: ./python-api
+      context: ./api
     container_name: kvist-og-bjaelke-api
     environment:
       DATABASE_PATH: /app/data/app.db

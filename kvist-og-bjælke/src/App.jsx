@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Keycloak from 'keycloak-js';
 import logoUrl from '../assets/logo.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8100';
+const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM || 'kvist-og-bjaelke';
+const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'kvist-og-bjaelke-app';
+const keycloak = new Keycloak({
+    url: KEYCLOAK_URL,
+    realm: KEYCLOAK_REALM,
+    clientId: KEYCLOAK_CLIENT_ID
+});
 
 function App() {
     const [mode, setMode] = useState('login');
@@ -9,6 +18,39 @@ function App() {
     const [user, setUser] = useState(null);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isKeycloakLoading, setIsKeycloakLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        keycloak.init({
+            onLoad: 'check-sso',
+            pkceMethod: 'S256',
+            checkLoginIframe: false
+        }).then((authenticated) => {
+            if (!isMounted || !authenticated) return;
+
+            const profile = keycloak.tokenParsed;
+            setUser({
+                username: profile?.preferred_username || profile?.name || 'Keycloak-bruger',
+                email: profile?.email || '',
+                authProvider: 'keycloak'
+            });
+        }).catch(() => {
+            if (isMounted && window.location.search.includes('error=')) {
+                setMessage({
+                    type: 'error',
+                    text: 'Keycloak-login kunne ikke gennemføres. Prøv igen.'
+                });
+            }
+        }).finally(() => {
+            if (isMounted) setIsKeycloakLoading(false);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const updateField = (event) => {
         setForm((current) => ({
@@ -56,7 +98,7 @@ function App() {
                     text: 'Din bruger er oprettet. Du kan logge ind nu.'
                 });
             } else {
-                setUser(data);
+                setUser({ ...data, authProvider: 'local' });
                 setForm((current) => ({ ...current, password: '' }));
             }
         } catch (error) {
@@ -66,7 +108,17 @@ function App() {
         }
     };
 
-    const logout = () => {
+    const loginWithKeycloak = () => {
+        setMessage({ type: '', text: '' });
+        keycloak.login({ redirectUri: window.location.origin });
+    };
+
+    const logout = async () => {
+        if (user?.authProvider === 'keycloak') {
+            await keycloak.logout({ redirectUri: window.location.origin });
+            return;
+        }
+
         setUser(null);
         setForm({ username: '', email: '', password: '' });
         setMessage({ type: '', text: '' });
@@ -90,7 +142,12 @@ function App() {
                             <span className="success-icon" aria-hidden="true">✓</span>
                             <p className="eyebrow">Du er logget ind</p>
                             <h2>Hej, {user.username}</h2>
-                            <p>{user.email}</p>
+                            <p>
+                                {user.email}
+                                <span className="login-provider">
+                                    Logget ind med {user.authProvider === 'keycloak' ? 'Keycloak' : 'almindelig bruger'}
+                                </span>
+                            </p>
                             <button className="secondary-button" type="button" onClick={logout}>
                                 Log ud
                             </button>
@@ -175,6 +232,20 @@ function App() {
                                         : mode === 'login' ? 'Log ind' : 'Opret bruger'}
                                 </button>
                             </form>
+
+                            {mode === 'login' && (
+                                <div className="federated-login">
+                                    <div className="login-divider"><span>eller</span></div>
+                                    <button
+                                        className="keycloak-button"
+                                        type="button"
+                                        onClick={loginWithKeycloak}
+                                        disabled={isKeycloakLoading}
+                                    >
+                                        {isKeycloakLoading ? 'Forbinder til Keycloak…' : 'Log ind med Keycloak'}
+                                    </button>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

@@ -1,5 +1,28 @@
 # To run the Python API
 
+## Kør hele løsningen med Keycloak
+
+Kopiér `.env.example` til `.env`, vælg et admin-password, og start derefter
+frontend, API og Keycloak:
+
+```bash
+docker compose up --build
+```
+
+Frontend kan nu åbnes på <http://localhost:3400>. Her kan man enten bruge det
+almindelige login/oprette en lokal bruger eller vælge **Log ind med Keycloak**.
+Det importerede undervisnings-realm indeholder denne testbruger:
+
+- Brugernavn: `keycloak-demo`
+- Password: `demo1234`
+
+Keycloaks admin-konsol findes på <http://localhost:8100/admin> og bruger
+oplysningerne `KEYCLOAK_ADMIN_USERNAME` og `KEYCLOAK_ADMIN_PASSWORD` fra `.env`.
+
+Keycloak-indstillingerne til frontend kan ændres med `VITE_KEYCLOAK_URL`,
+`VITE_KEYCLOAK_REALM` og `VITE_KEYCLOAK_CLIENT_ID`. Ved andre frontend-adresser
+skal klientens redirect URI og web origin også opdateres i realm-konfigurationen.
+
 Et lille REST API bygget med FastAPI og SQLite. API'et kan oprette, hente,
 opdatere og slette brugere.
 

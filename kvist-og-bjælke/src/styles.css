@@ -210,6 +210,49 @@ input:focus {
     opacity: 0.65;
 }
 
+.federated-login {
+    margin-top: 22px;
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    color: #7c867f;
+    font-size: 0.8rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+    flex: 1;
+    height: 1px;
+    background: #e0e4e1;
+    content: "";
+}
+
+.keycloak-button {
+    width: 100%;
+    border: 1px solid #bcc7c0;
+    border-radius: 10px;
+    padding: 13px 20px;
+    color: #1e3a30;
+    background: #fff;
+    font-weight: 800;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.keycloak-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: #547060;
+    background: #f5f7f5;
+}
+
+.keycloak-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
 .message {
     margin: 0 0 14px;
     border-radius: 9px;
@@ -235,6 +278,13 @@ input:focus {
 .welcome-state > p:not(.eyebrow) {
     margin: 12px 0 32px;
     color: #657069;
+}
+
+.login-provider {
+    display: block;
+    margin-top: 8px;
+    color: #7c867f;
+    font-size: 0.82rem;
 }
 
 .success-icon {
