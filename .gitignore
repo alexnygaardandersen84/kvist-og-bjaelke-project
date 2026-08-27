@@ -228,3 +228,6 @@ data/*.db
 
 # Lokal bcrypt-integration (bevidst ikke versionsstyret i denne demo)
 app/bcrypt_integration.py
+
+#Ignorer temp folder for bcrypt-docker database
+/temp_db/
